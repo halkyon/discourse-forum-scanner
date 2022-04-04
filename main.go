@@ -16,15 +16,21 @@ import (
 	"github.com/zeebo/errs"
 )
 
-var (
-	discourseURL   = flag.String("discourss-url", "", "URL to Discourse instance")
-	timeout        = flag.Duration("timeout", time.Second*10, "Timeout after fetching post data")
-	filterKeywords = flag.String("filter-keywords", "", "Comma separated list of keywords to filter posts by")
+const (
+	discourseURLFlagName   = "discourse-url"
+	timeoutFlagName        = "timeout"
+	filterKeywordsFlagName = "filter-keywords"
 )
 
-// PostsResponse represents a response containing a number of forum posts.
-type PostsResponse struct {
-	Posts []Post `json:"latest_posts"`
+var (
+	discourseURL   = flag.String(discourseURLFlagName, "", "URL to Discourse instance")
+	timeout        = flag.Duration(timeoutFlagName, time.Second*10, "Timeout after fetching post data")
+	filterKeywords = flag.String(filterKeywordsFlagName, "", "Comma separated list of keywords to filter posts by")
+)
+
+// Posts represents a response containing a number of posts.
+type Posts struct {
+	LatestPosts []Post `json:"latest_posts"`
 }
 
 // Post represents a single forum post.
@@ -44,7 +50,7 @@ func validateFlags() (err error) {
 			err = errs.Combine(err, fmt.Errorf("flag %s is empty", name))
 		}
 	}
-	validate("discourse-url", *discourseURL)
+	validate(discourseURLFlagName, *discourseURL)
 	return err
 }
 
@@ -67,12 +73,30 @@ func run() error {
 		Timeout: *timeout,
 	}
 
-	postsURL, err := joinURL(*discourseURL, "posts.json")
+	var p Posts
+	if err := fetchPosts(ctx, client, *discourseURL, &p); err != nil {
+		return err
+	}
+
+	// todo: filter by keywords if provided.
+	// todo: decide if we want to check all posts including replies, or just
+	// the first post in a thread.
+	// todo: run in a loop, and only check posts that haven't already been checked
+
+	for _, p := range p.LatestPosts {
+		fmt.Println(p.ID, p.CreatedAt, p.UpdatedAt, p.Username, p.Title)
+	}
+
+	return nil
+}
+
+func fetchPosts(ctx context.Context, client http.Client, baseURL string, p *Posts) error {
+	url, err := joinURL(baseURL, "posts.json")
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, postsURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
@@ -87,19 +111,7 @@ func run() error {
 		_ = rsp.Body.Close()
 	}()
 
-	var pr PostsResponse
-	if err := json.NewDecoder(rsp.Body).Decode(&pr); err != nil {
-		return err
-	}
-
-	// todo: filter by keywords if provided.
-	// todo: run in a loop, and only check posts that haven't already been checked
-
-	for _, p := range pr.Posts {
-		fmt.Println(p.ID, p.CreatedAt, p.UpdatedAt, p.Username, p.Title)
-	}
-
-	return nil
+	return json.NewDecoder(rsp.Body).Decode(p)
 }
 
 func joinURL(baseURL, endpoint string) (string, error) {
