@@ -19,9 +19,7 @@ const requestTimeoutSeconds = 10
 // an invalid URL, or there's network connectivity issues.
 var ErrFetchingPost = errs.New("error fetching post")
 
-// errorFunc is called when the checker encounters an error, but this doesn't stop the checker from stopping
-// because it's a recoverable error, such as network connectivity errors. This allows the caller to handle
-// the error somehow, such as log it.
+// errorFunc is a callback for when PostChecker encounters an error.
 type errFunc func(error)
 
 // Posts represents a response containing a number of posts.
