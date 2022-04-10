@@ -14,8 +14,6 @@ builds:
       - amd64
       - arm
       - arm64
-    goarm:
-      - "6"
     ignore:
       - goos: windows
         goarch: arm
@@ -41,6 +39,7 @@ dockers:
   - image_templates:
       - "ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-armv6"
     goarch: arm
+    goarm: "6"
     use: buildx
     build_flag_templates:
       - --platform=linux/arm/v6
