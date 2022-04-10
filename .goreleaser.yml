@@ -53,7 +53,7 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
   - image_templates:
-      - "ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64/v8"
+      - "ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8"
     goarch: arm64
     use: buildx
     build_flag_templates:
