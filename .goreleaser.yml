@@ -25,7 +25,7 @@ builds:
       - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.date={{ .CommitDate }}
 dockers:
   - image_templates:
-      - "ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
     goarch: amd64
     use: buildx
     build_flag_templates:
@@ -39,7 +39,7 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
   - image_templates:
-      - "ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-armv6"
+      - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
     goarch: arm
     goarm: "6"
     use: buildx
@@ -54,7 +54,7 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
   - image_templates:
-      - "ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+      - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
     goarch: arm64
     use: buildx
     build_flag_templates:
@@ -80,16 +80,17 @@ docker_manifests:
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+    format: tar.gz
     format_overrides:
       - goos: windows
         format: zip
 checksum:
-  name_template: 'checksums.txt'
+  name_template: checksums.txt
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
