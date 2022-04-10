@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/halkyon/discourse-forum-scanner/internal/postchecker"
+	"github.com/halkyon/discourse-scanner/internal/postchecker"
 	"github.com/zeebo/errs"
 )
 

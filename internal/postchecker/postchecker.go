@@ -9,7 +9,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/halkyon/discourse-forum-scanner/internal/post"
+	"github.com/halkyon/discourse-scanner/internal/post"
 	"github.com/zeebo/errs"
 )
 

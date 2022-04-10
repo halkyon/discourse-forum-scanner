@@ -1,4 +1,4 @@
-# discourse-forum-scanner
+# discourse-scanner
 
 This is under development.
 

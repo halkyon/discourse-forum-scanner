@@ -3,7 +3,7 @@ package post_test
 import (
 	"testing"
 
-	"github.com/halkyon/discourse-forum-scanner/internal/post"
+	"github.com/halkyon/discourse-scanner/internal/post"
 )
 
 func TestContainsKeywords(t *testing.T) {

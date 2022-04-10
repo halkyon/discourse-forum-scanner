@@ -1,3 +1,3 @@
 FROM alpine
-COPY discourse-forum-scanner /usr/bin/discourse-forum-scanner
-ENTRYPOINT ["/usr/bin/discourse-forum-scanner"]
+COPY discourse-scanner /usr/bin/discourse-scanner
+ENTRYPOINT ["/usr/bin/discourse-scanner"]
