@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"time"
 
@@ -15,6 +14,15 @@ import (
 )
 
 const requestTimeoutSeconds = 10
+
+// ErrFetchingPost occurs when a request fails to retrieve post data. This is most likely due to
+// an invalid URL, or there's network connectivity issues.
+var ErrFetchingPost = errs.New("error fetching post")
+
+// errorFunc is called when the checker encounters an error, but this doesn't stop the checker from stopping
+// because it's a recoverable error, such as network connectivity errors. This allows the caller to handle
+// the error somehow, such as log it.
+type errFunc func(error)
 
 // Posts represents a response containing a number of posts.
 type Posts struct {
@@ -27,15 +35,17 @@ type PostChecker struct {
 	url      string
 	keywords string
 	interval time.Duration
+	errFunc  errFunc
 }
 
 // New returns a new instance of PostChecker.
-func New(url, keywords string, interval time.Duration) *PostChecker {
+func New(url, keywords string, interval time.Duration, f errFunc) *PostChecker {
 	return &PostChecker{
 		client:   http.Client{Timeout: requestTimeoutSeconds * time.Second},
 		url:      url,
 		keywords: keywords,
 		interval: interval,
+		errFunc:  f,
 	}
 }
 
@@ -47,17 +57,19 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("signal received, finishing")
 			done <- nil
 			return
 		case <-ticker.C:
 			var p Posts
+			// todo: add backoff/retry logic?
 			if err := fetchLatestPosts(ctx, pc.client, pc.url, &p); err != nil {
-				fmt.Fprintf(os.Stderr, "error fetching posts: %s\n", err)
+				if pc.errFunc != nil {
+					pc.errFunc(fmt.Errorf("%w: %s", ErrFetchingPost, err))
+				}
 				continue
 			}
 			// todo: filter posts we already checked. We may need to store the last post ID checked somewhere.
-			// todo: integration with slack.
+			// todo: do something with the posts.
 			for _, p := range p.Latest {
 				if p.ContainsKeywords(pc.keywords) {
 					fmt.Println("*", p.ID, p.CreatedAt, p.UpdatedAt, p.Username, p.Title)

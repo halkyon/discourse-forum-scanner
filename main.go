@@ -49,7 +49,6 @@ func main() {
 		fmt.Printf("fatal: %+v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("finished")
 }
 
 func run() error {
@@ -63,7 +62,9 @@ func run() error {
 
 	done := make(chan error, 1)
 
-	pc := postchecker.New(*discourseURL, *filterKeywords, *checkInterval)
+	pc := postchecker.New(*discourseURL, *filterKeywords, *checkInterval, func(err error) {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+	})
 	go pc.Run(ctx, done)
 
 	return <-done
