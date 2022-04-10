@@ -18,6 +18,11 @@ func TestContainsKeywords(t *testing.T) {
 		want     bool
 	}{
 		{
+			name:     "empty keywords",
+			keywords: "",
+			want:     false,
+		},
+		{
 			name:     "post contains single keyword in title",
 			keywords: "mobile",
 			want:     true,

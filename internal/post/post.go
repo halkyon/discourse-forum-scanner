@@ -18,6 +18,9 @@ type Post struct {
 
 // ContainsKeywords checks if the post has least one of the keywords in the post title, and/or content.
 func (p Post) ContainsKeywords(keywords string) bool {
+	if keywords == "" {
+		return false
+	}
 	var hasKeyword bool
 	for _, keyword := range strings.Split(keywords, ",") {
 		if strings.Contains(p.ContentRaw, keyword) || strings.Contains(p.Title, keyword) {
@@ -25,8 +28,5 @@ func (p Post) ContainsKeywords(keywords string) bool {
 			break
 		}
 	}
-	if hasKeyword || keywords == "" {
-		return true
-	}
-	return false
+	return hasKeyword
 }

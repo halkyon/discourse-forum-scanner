@@ -69,7 +69,7 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 			// todo: filter posts we already checked. We may need to store the last post ID checked somewhere.
 			// todo: do something with the posts.
 			for _, p := range p.Latest {
-				if p.ContainsKeywords(pc.keywords) {
+				if pc.keywords == "" || p.ContainsKeywords(pc.keywords) {
 					fmt.Println("*", p.ID, p.CreatedAt, p.UpdatedAt, p.Username, p.Title)
 				}
 			}
