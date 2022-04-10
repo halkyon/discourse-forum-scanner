@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,15 +16,17 @@ import (
 )
 
 const (
-	discourseURLFlagName   = "discourse-url"
-	timeoutFlagName        = "timeout"
-	filterKeywordsFlagName = "filter-keywords"
+	discourseURLFlagName  = "discourse-url"
+	timeoutFlagName       = "timeout"
+	checkIntervalFlagName = "check-interval"
+	// filterKeywordsFlagName = "filter-keywords".
 )
 
 var (
-	discourseURL   = flag.String(discourseURLFlagName, "", "URL to Discourse instance")
-	timeout        = flag.Duration(timeoutFlagName, time.Second*10, "Timeout after fetching post data")
-	filterKeywords = flag.String(filterKeywordsFlagName, "", "Comma separated list of keywords to filter posts by")
+	discourseURL  = flag.String(discourseURLFlagName, "", "URL to Discourse instance")
+	timeout       = flag.Duration(timeoutFlagName, 10*time.Second, "Timeout after fetching post data")
+	checkInterval = flag.Duration(checkIntervalFlagName, 10*time.Minute, "Interval betweenn fetching posts")
+	// filterKeywords = flag.String(filterKeywordsFlagName, "", "Comma separated list of keywords to filter posts by").
 )
 
 // Posts represents a response containing a number of posts.
@@ -56,8 +57,10 @@ func validateFlags() (err error) {
 
 func main() {
 	if err := run(); err != nil {
-		log.Fatal(err)
+		fmt.Printf("fatal: %+v\n", err)
+		os.Exit(1)
 	}
+	fmt.Println("finished")
 }
 
 func run() error {
@@ -73,21 +76,38 @@ func run() error {
 		Timeout: *timeout,
 	}
 
-	var p Posts
-	if err := fetchPosts(ctx, client, *discourseURL, &p); err != nil {
-		return err
-	}
+	ticker := time.NewTicker(*checkInterval)
+	defer ticker.Stop()
 
-	// todo: filter by keywords if provided.
-	// todo: decide if we want to check all posts including replies, or just
-	// the first post in a thread.
-	// todo: run in a loop, and only check posts that haven't already been checked
+	done := make(chan error, 1)
 
-	for _, p := range p.LatestPosts {
-		fmt.Println(p.ID, p.CreatedAt, p.UpdatedAt, p.Username, p.Title)
-	}
+	go func(ctx context.Context, client http.Client, url string, ticker *time.Ticker, done chan<- error) {
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Println("signal received, finishing")
+				done <- nil
+				return
+			case <-ticker.C:
+				var p Posts
+				if err := fetchPosts(ctx, client, url, &p); err != nil {
+					fmt.Fprintf(os.Stderr, "error fetching posts: %s\n", err)
+					continue
+				}
+				// todo: decide if we want to check all posts including replies, or just
+				// the first post in a thread.
 
-	return nil
+				// todo: filter by keywords if provided.
+				// todo: only check posts that haven't been checked. Can we pass some filter query param
+				// to posts.json to only fetch posts we haven't seen?
+				for _, p := range p.LatestPosts {
+					fmt.Println(p.ID, p.CreatedAt, p.UpdatedAt, p.Username, p.Title)
+				}
+			}
+		}
+	}(ctx, client, *discourseURL, ticker, done)
+
+	return <-done
 }
 
 func fetchPosts(ctx context.Context, client http.Client, baseURL string, p *Posts) error {
@@ -107,11 +127,8 @@ func fetchPosts(ctx context.Context, client http.Client, baseURL string, p *Post
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = rsp.Body.Close()
-	}()
 
-	return json.NewDecoder(rsp.Body).Decode(p)
+	return errs.Combine(json.NewDecoder(rsp.Body).Decode(p), rsp.Body.Close())
 }
 
 func joinURL(baseURL, endpoint string) (string, error) {
