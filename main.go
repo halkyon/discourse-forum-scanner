@@ -42,7 +42,6 @@ func validateFlags() (err error) {
 		if _, parseErr := url.ParseRequestURI(value); parseErr != nil {
 			err = errs.Combine(err, fmt.Errorf("flag %s is invalid: %w", name, parseErr))
 		}
-
 	}
 
 	validateNotEmpty(discourseURLFlag, *discourseURL)

@@ -17,7 +17,7 @@ type Post struct {
 }
 
 // ContainsKeywords checks if the post has least one of the keywords in the post title, and/or content.
-func (p Post) ContainsKeywords(keywords string) bool {
+func (p *Post) ContainsKeywords(keywords string) bool {
 	if keywords == "" {
 		return false
 	}

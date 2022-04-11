@@ -30,17 +30,17 @@ type Posts struct {
 // PostChecker represents a way of checking forum posts for keywords.
 type PostChecker struct {
 	client   http.Client
-	url      string
+	baseURL  string
 	keywords string
 	interval time.Duration
 	errFunc  errFunc
 }
 
 // New returns a new instance of PostChecker.
-func New(url, keywords string, interval time.Duration, f errFunc) *PostChecker {
+func New(baseURL, keywords string, interval time.Duration, f errFunc) *PostChecker {
 	return &PostChecker{
 		client:   http.Client{Timeout: requestTimeoutSeconds * time.Second},
-		url:      url,
+		baseURL:  baseURL,
 		keywords: keywords,
 		interval: interval,
 		errFunc:  f,
@@ -60,7 +60,7 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 		case <-ticker.C:
 			var p Posts
 			// todo: add backoff/retry logic?
-			if err := fetchLatestPosts(ctx, pc.client, pc.url, &p); err != nil {
+			if err := fetchLatestPosts(ctx, pc.client, pc.baseURL, &p); err != nil {
 				if pc.errFunc != nil {
 					pc.errFunc(fmt.Errorf("%w: %s", ErrFetchingPost, err))
 				}
@@ -78,13 +78,13 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 }
 
 func fetchLatestPosts(ctx context.Context, client http.Client, baseURL string, p *Posts) error {
-	url, err := url.Parse(baseURL)
+	u, err := url.Parse(baseURL)
 	if err != nil {
 		return err
 	}
-	url.Path = path.Join(url.Path, "posts.json")
+	u.Path = path.Join(u.Path, "posts.json")
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), http.NoBody)
 	if err != nil {
 		return err
 	}
