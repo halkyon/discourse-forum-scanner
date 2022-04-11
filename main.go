@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"net/url"
@@ -93,7 +92,7 @@ func run() error {
 	})
 	go pc.Run(ctx, done)
 
-	if err := <-done; !errors.Is(err, context.Canceled) {
+	if err := <-done; !errs.Is(err, context.Canceled) {
 		return err
 	}
 	return nil
