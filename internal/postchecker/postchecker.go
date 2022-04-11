@@ -55,7 +55,7 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 	for {
 		select {
 		case <-ctx.Done():
-			done <- nil
+			done <- ctx.Err()
 			return
 		case <-ticker.C:
 			var p Posts
