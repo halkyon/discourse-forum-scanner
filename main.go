@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"net/url"
 	"os"
 	"os/signal"
 	"runtime"
@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/halkyon/discourse-scanner/internal/postchecker"
-	"github.com/zeebo/errs"
 )
 
 const (
@@ -33,23 +32,15 @@ var (
 )
 
 func validateFlags() (err error) {
-	validateNotEmpty := func(name, value string) {
-		if value == "" {
-			err = errs.Combine(err, fmt.Errorf("flag %s is empty", name))
-		}
+	if err := validateNotEmpty(discourseURLFlag, *discourseURL); err != nil {
+		return err
 	}
-	validateURL := func(name, value string) {
-		if _, parseErr := url.ParseRequestURI(value); parseErr != nil {
-			err = errs.Combine(err, fmt.Errorf("flag %s is invalid: %w", name, parseErr))
-		}
-	}
-
-	validateNotEmpty(discourseURLFlag, *discourseURL)
 	if *discourseURL != "" {
-		validateURL(discourseURLFlag, *discourseURL)
+		if err := validateURL(discourseURLFlag, *discourseURL); err != nil {
+			return err
+		}
 	}
-
-	return err
+	return nil
 }
 
 func main() {
@@ -90,7 +81,7 @@ func run() error {
 	pc := postchecker.New(*discourseURL, *filterKeywords, *checkInterval)
 	go pc.Run(ctx, done)
 
-	if err := <-done; !errs.Is(err, context.Canceled) {
+	if err := <-done; !errors.Is(err, context.Canceled) {
 		return err
 	}
 	return nil

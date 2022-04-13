@@ -10,13 +10,9 @@ import (
 	"time"
 
 	"github.com/halkyon/discourse-scanner/internal/post"
-	"github.com/zeebo/errs"
 )
 
 const requestTimeoutSeconds = 10
-
-// Error is a class of postchecker errors.
-var Error = errs.Class("post checker")
 
 // Posts represents a response containing a number of posts.
 type Posts struct {
@@ -55,7 +51,7 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 			var p Posts
 			// todo: add backoff/retry logic?
 			if err := fetchLatestPosts(ctx, pc.client, pc.baseURL, &p); err != nil {
-				done <- Error.New("fetching latest posts: %w", err)
+				done <- fmt.Errorf("fetching latest posts: %w", err)
 				return
 			}
 			// todo: filter posts we already checked. We may need to store the last post ID checked somewhere.
@@ -72,21 +68,27 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 func fetchLatestPosts(ctx context.Context, client http.Client, baseURL string, p *Posts) error {
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		return err
+		return fmt.Errorf("url parse: %w", err)
 	}
 	u.Path = path.Join(u.Path, "posts.json")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), http.NoBody)
 	if err != nil {
-		return err
+		return fmt.Errorf("new request: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/json")
 
 	rsp, err := client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("do request: %w", err)
 	}
+	defer func() {
+		_ = rsp.Body.Close()
+	}()
 
-	return errs.Combine(json.NewDecoder(rsp.Body).Decode(p), rsp.Body.Close())
+	if err := json.NewDecoder(rsp.Body).Decode(p); err != nil {
+		return fmt.Errorf("json decoder: %w", err)
+	}
+	return nil
 }
