@@ -21,12 +21,10 @@ func (p *Post) ContainsKeywords(keywords string) bool {
 	if keywords == "" {
 		return false
 	}
-	var hasKeyword bool
 	for _, keyword := range strings.Split(keywords, ",") {
 		if strings.Contains(p.ContentRaw, keyword) || strings.Contains(p.Title, keyword) {
-			hasKeyword = true
-			break
+			return true
 		}
 	}
-	return hasKeyword
+	return false
 }
