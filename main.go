@@ -35,10 +35,8 @@ func validateFlags() (err error) {
 	if err := validateNotEmpty(discourseURLFlag, *discourseURL); err != nil {
 		return err
 	}
-	if *discourseURL != "" {
-		if err := validateURL(discourseURLFlag, *discourseURL); err != nil {
-			return err
-		}
+	if err := validateURL(discourseURLFlag, *discourseURL); err != nil && *discourseURL != "" {
+		return err
 	}
 	return nil
 }
