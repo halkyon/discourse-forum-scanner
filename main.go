@@ -31,7 +31,7 @@ var (
 	filterKeywords = flag.String(filterKeywordsFlag, "", "Comma separated list of keywords to filter posts by")
 )
 
-func validateFlags() (err error) {
+func validateFlags() error {
 	if err := validateNotEmpty(discourseURLFlag, *discourseURL); err != nil {
 		return err
 	}
