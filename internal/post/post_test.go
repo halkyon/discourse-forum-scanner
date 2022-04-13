@@ -9,7 +9,7 @@ import (
 func TestContainsKeywords(t *testing.T) {
 	p := post.Post{
 		Title:      "has anyone seen my mobile?",
-		ContentRaw: "my mobile disappeared\ndoes anyone know where it is?",
+		ContentRaw: "my mobile PHONE disappeared\ndoes anyone know where it is?",
 	}
 	tests := []struct {
 		name     string
@@ -45,6 +45,11 @@ func TestContainsKeywords(t *testing.T) {
 		{
 			name:     "post contains multiple keywords in content",
 			keywords: "anyone,know",
+			want:     true,
+		},
+		{
+			name:     "post contains keyword in different case",
+			keywords: "phone",
 			want:     true,
 		},
 	}
