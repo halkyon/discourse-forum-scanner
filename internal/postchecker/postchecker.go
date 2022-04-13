@@ -15,12 +15,8 @@ import (
 
 const requestTimeoutSeconds = 10
 
-// ErrFetchingPost occurs when a request fails to retrieve post data. This is most likely due to
-// an invalid URL, or there's network connectivity issues.
-var ErrFetchingPost = errs.New("error fetching post")
-
-// errorFunc is a callback for when PostChecker encounters an error.
-type errFunc func(error)
+// Error is a class of postchecker errors.
+var Error = errs.Class("post checker")
 
 // Posts represents a response containing a number of posts.
 type Posts struct {
@@ -33,17 +29,15 @@ type PostChecker struct {
 	baseURL  string
 	keywords string
 	interval time.Duration
-	errFunc  errFunc
 }
 
 // New returns a new instance of PostChecker.
-func New(baseURL, keywords string, interval time.Duration, f errFunc) *PostChecker {
+func New(baseURL, keywords string, interval time.Duration) *PostChecker {
 	return &PostChecker{
 		client:   http.Client{Timeout: requestTimeoutSeconds * time.Second},
 		baseURL:  baseURL,
 		keywords: keywords,
 		interval: interval,
-		errFunc:  f,
 	}
 }
 
@@ -61,10 +55,8 @@ func (pc *PostChecker) Run(ctx context.Context, done chan<- error) {
 			var p Posts
 			// todo: add backoff/retry logic?
 			if err := fetchLatestPosts(ctx, pc.client, pc.baseURL, &p); err != nil {
-				if pc.errFunc != nil {
-					pc.errFunc(fmt.Errorf("%w: %s", ErrFetchingPost, err))
-				}
-				continue
+				done <- Error.New("fetching latest posts: %w", err)
+				return
 			}
 			// todo: filter posts we already checked. We may need to store the last post ID checked somewhere.
 			// todo: do something with the posts.

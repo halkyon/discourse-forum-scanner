@@ -87,9 +87,7 @@ func run() error {
 
 	done := make(chan error, 1)
 
-	pc := postchecker.New(*discourseURL, *filterKeywords, *checkInterval, func(err error) {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-	})
+	pc := postchecker.New(*discourseURL, *filterKeywords, *checkInterval)
 	go pc.Run(ctx, done)
 
 	if err := <-done; !errs.Is(err, context.Canceled) {
