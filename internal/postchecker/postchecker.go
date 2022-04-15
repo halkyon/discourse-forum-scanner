@@ -30,7 +30,12 @@ type PostChecker struct {
 // New returns a new instance of PostChecker.
 func New(baseURL, keywords string, interval time.Duration) *PostChecker {
 	return &PostChecker{
-		client:   http.Client{Timeout: requestTimeoutSeconds * time.Second},
+		client: http.Client{
+			Transport:     http.DefaultTransport,
+			Timeout:       requestTimeoutSeconds * time.Second,
+			Jar:           nil,
+			CheckRedirect: nil,
+		},
 		baseURL:  baseURL,
 		keywords: keywords,
 		interval: interval,
@@ -90,5 +95,6 @@ func fetchLatestPosts(ctx context.Context, client http.Client, baseURL string, p
 	if err := json.NewDecoder(rsp.Body).Decode(p); err != nil {
 		return fmt.Errorf("json decoder: %w", err)
 	}
+
 	return nil
 }

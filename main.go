@@ -22,12 +22,15 @@ const (
 )
 
 var (
-	version        = "dev"
-	commit         = ""
-	date           = ""
+	version = "dev"
+	commit  = ""
+	date    = ""
+
+	defaultCheckInterval = 10 * time.Minute
+
 	displayVersion = flag.Bool(displayVersionFlag, false, "Display version information")
 	discourseURL   = flag.String(discourseURLFlag, "", "URL to Discourse instance")
-	checkInterval  = flag.Duration(checkIntervalFlag, 10*time.Minute, "Interval between getting posts")
+	checkInterval  = flag.Duration(checkIntervalFlag, defaultCheckInterval, "Interval between getting posts")
 	filterKeywords = flag.String(filterKeywordsFlag, "", "Comma separated list of keywords to filter posts by")
 )
 
@@ -38,6 +41,7 @@ func validateFlags() error {
 	if err := validateURL(discourseURLFlag, *discourseURL); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -52,18 +56,7 @@ func run() error {
 	flag.Parse()
 
 	if *displayVersion {
-		result := version
-		if commit != "" {
-			result = fmt.Sprintf("%s\ncommit: %s", result, commit)
-		}
-		if date != "" {
-			result = fmt.Sprintf("%s\nbuilt at: %s", result, date)
-		}
-		result = fmt.Sprintf("%s\ngoos: %s\ngoarch: %s", result, runtime.GOOS, runtime.GOARCH)
-		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
-			result = fmt.Sprintf("%s\nmodule version: %s, checksum: %s", result, info.Main.Version, info.Main.Sum)
-		}
-		fmt.Println(result)
+		printVersion()
 		return nil
 	}
 
@@ -82,5 +75,25 @@ func run() error {
 	if err := <-done; !errors.Is(err, context.Canceled) {
 		return err
 	}
+
 	return nil
+}
+
+func printVersion() {
+	result := version
+
+	if commit != "" {
+		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
+	}
+
+	if date != "" {
+		result = fmt.Sprintf("%s\nbuilt at: %s", result, date)
+	}
+
+	result = fmt.Sprintf("%s\ngoos: %s\ngoarch: %s", result, runtime.GOOS, runtime.GOARCH)
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+		result = fmt.Sprintf("%s\nmodule version: %s, checksum: %s", result, info.Main.Version, info.Main.Sum)
+	}
+
+	fmt.Println(result)
 }
