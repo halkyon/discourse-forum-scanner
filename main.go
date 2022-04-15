@@ -34,17 +34,6 @@ var (
 	filterKeywords = flag.String(filterKeywordsFlag, "", "Comma separated list of keywords to filter posts by")
 )
 
-func validateFlags() error {
-	if err := validateNotEmpty(discourseURLFlag, *discourseURL); err != nil {
-		return err
-	}
-	if err := validateURL(discourseURLFlag, *discourseURL); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func main() {
 	if err := run(); err != nil {
 		fmt.Printf("fatal: %+v\n", err)
@@ -96,4 +85,15 @@ func printVersion() {
 	}
 
 	fmt.Println(result)
+}
+
+func validateFlags() error {
+	if err := validateNotEmpty(discourseURLFlag, *discourseURL); err != nil {
+		return err
+	}
+	if err := validateURL(discourseURLFlag, *discourseURL); err != nil {
+		return err
+	}
+
+	return nil
 }
