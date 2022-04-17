@@ -14,8 +14,10 @@ builds:
       - amd64
       - arm
       - arm64
+    goamd64:
+      - v1
     goarm:
-      - "6"
+      - 6
     ignore:
       - goos: windows
         goarch: arm
@@ -102,7 +104,6 @@ checksum:
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
-  sort: asc
   filters:
     exclude:
       - "^docs:"
