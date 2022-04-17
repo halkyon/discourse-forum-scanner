@@ -25,6 +25,7 @@ builds:
       - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.date={{ .CommitDate }}
 dockers:
   - image_templates:
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
     goarch: amd64
     use: buildx
@@ -39,6 +40,7 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
   - image_templates:
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
     goarch: arm
     goarm: "6"
@@ -54,6 +56,7 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
   - image_templates:
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
     goarch: arm64
     use: buildx
@@ -68,11 +71,21 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
 docker_manifests:
+  - name_template: halkyon/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
   - name_template: ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}
     image_templates:
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
+  - name_template: halkyon/{{ .ProjectName }}:latest
+    image_templates:
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
+      - halkyon/{{ .ProjectName }}:{{ .Version }}-arm64v8
   - name_template: ghcr.io/halkyon/{{ .ProjectName }}:latest
     image_templates:
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
