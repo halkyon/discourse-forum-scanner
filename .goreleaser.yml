@@ -30,6 +30,7 @@ dockers:
       - halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
     goarch: amd64
+    goamd64: v1
     use: buildx
     build_flag_templates:
       - --platform=linux/amd64
@@ -45,7 +46,7 @@ dockers:
       - halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
       - ghcr.io/halkyon/{{ .ProjectName }}:{{ .Version }}-armv6
     goarch: arm
-    goarm: "6"
+    goarm: 6
     use: buildx
     build_flag_templates:
       - --platform=linux/arm/v6
