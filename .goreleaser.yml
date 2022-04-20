@@ -25,6 +25,8 @@ builds:
         goarch: arm
     ldflags:
       - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.date={{ .CommitDate }}
+gomod:
+  proxy: true
 dockers:
   - image_templates:
       - halkyon/{{ .ProjectName }}:{{ .Version }}-amd64
@@ -103,6 +105,33 @@ archives:
 checksum:
   name_template: checksums_sha256.txt
   algorithm: sha256
+source:
+  enabled: true
+sboms:
+  - artifacts: archive
+  - id: source
+    artifacts: source
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+    artifacts: checksum
+    output: true
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    args:
+    - "sign"
+    - "${artifact}"
+    artifacts: images
+    output: true
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
